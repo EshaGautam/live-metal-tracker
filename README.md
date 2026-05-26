@@ -4,6 +4,129 @@ A React Native mobile app that displays live spot prices for four precious metal
 
 ---
 
+## Execution steps (quick start)
+
+Follow these steps in order to run the app on your machine.
+
+### Step 0 — Install prerequisites
+
+1. Install **Node.js 22.11+**: https://nodejs.org/
+2. Verify:
+
+   ```sh
+   node -v
+   npm -v
+   ```
+
+3. Complete the **React Native environment setup** for your OS:  
+   https://reactnative.dev/docs/set-up-your-environment
+
+   - **Windows (Android):** Android Studio, Android SDK, and an emulator (or a phone with USB debugging).
+   - **macOS (Android + iOS):** Android Studio and/or Xcode + CocoaPods for iOS.
+
+### Step 1 — Get the project
+
+```sh
+git clone <repository-url>
+cd MetalPriceTracker
+```
+
+If you received a ZIP, extract it and open a terminal in the `MetalPriceTracker` folder.
+
+### Step 2 — Install npm packages
+
+```sh
+npm install
+```
+
+### Step 3 — Add the API key
+
+1. In the project root, copy the example env file:
+
+   ```sh
+   copy .env.example .env
+   ```
+
+   On macOS/Linux:
+
+   ```sh
+   cp .env.example .env
+   ```
+
+2. Open `.env` and set your GoldAPI key:
+
+   ```env
+   GOLD_API_KEY=your_actual_key_from_goldapi_io
+   ```
+
+3. Get a free key from https://www.goldapi.io/ (sign up → dashboard → API key).
+
+> **Important:** Do not commit `.env` to Git. Rebuild the app after changing this file (Step 5), not only Metro reload.
+
+### Step 4 — Start Metro (JavaScript bundler)
+
+Open a terminal in the project folder and run:
+
+```sh
+npm start
+```
+
+Leave this terminal **open**. You should see the Metro welcome screen.
+
+### Step 5 — Run the app on a device/emulator
+
+Open a **second terminal** in the same project folder.
+
+**Android**
+
+1. Start an Android emulator from Android Studio **or** connect a phone with USB debugging enabled.
+2. Run:
+
+   ```sh
+   npm run android
+   ```
+
+3. Wait for the build to finish. The app should open on the emulator/device.
+
+**iOS (macOS only)**
+
+```sh
+cd ios
+bundle install
+bundle exec pod install
+cd ..
+npm run ios
+```
+
+### Step 6 — Verify the app works
+
+- You should see **Metal Prices** with four cards (Gold, Silver, Platinum, Palladium).
+- Skeleton loaders appear briefly, then live prices load.
+- **Pull down** on the list or tap **Refresh** in the header to reload prices.
+- **Tap a card** to expand bid, ask, high, low, and related fields.
+
+### Step 7 — Reload during development (optional)
+
+| Action | Android emulator |
+|--------|------------------|
+| Fast refresh | Save a file in the editor |
+| Full reload | Press `R` twice |
+| Dev menu | `Ctrl + M` (Windows) / `Cmd + M` (Mac) |
+
+If prices stay empty or you see API errors, check `.env`, then run `npm run android` again (full rebuild).
+
+### Troubleshooting
+
+| Problem | What to try |
+|---------|-------------|
+| `GOLD_API_KEY` / config undefined | Create `.env`, then rebuild: `npm run android` |
+| Build fails on Android | Open Android Studio → SDK Manager → install required SDKs; set `ANDROID_HOME` |
+| Metro port in use | `npx react-native start --reset-cache` |
+| Emulator not found | Start emulator in Android Studio before `npm run android` |
+| API / rate limit errors | Check key on goldapi.io; free tier has request limits |
+
+---
+
 ## Solution overview
 
 | Area | Details |
