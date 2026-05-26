@@ -1,97 +1,194 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Metal Price Tracker
 
-# Getting Started
+A React Native mobile app that displays live spot prices for four precious metals (Gold, Silver, Platinum, and Palladium) using the [GoldAPI.io](https://www.goldapi.io/) REST API. The UI is styled for a fintech use case with expandable cards, market summary stats, pull-to-refresh, and loading skeletons.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+---
 
-## Step 1: Start Metro
+## Solution overview
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+| Area | Details |
+|------|---------|
+| **Platform** | React Native `0.85.3` (Android & iOS) |
+| **Language** | TypeScript |
+| **Data source** | GoldAPI.io — `GET /api/{METAL}/{CURRENCY}` (e.g. `XAU/USD`) |
+| **Auth** | API key via `x-access-token` header (`react-native-config` + `.env`) |
+| **Metals** | XAU (Gold), XAG (Silver), XPT (Platinum), XPD (Palladium) |
+| **Currency** | USD (prices, change, and gram rates formatted for US locale) |
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### Main features
+
+- Live spot price, daily change (`ch`), change percent (`chp`), and 24k price per gram
+- **Market summary** — count of live quotes, metals up/down, top mover
+- **Expandable metal cards** — tap to show high, low, bid, ask, open, and previous close
+- **Pull-to-refresh** and header **Refresh** button
+- **Loading skeletons** while each metal request completes
+- Per-metal error handling (one failure does not block others)
+- Safe area support for notched devices
+
+### Project structure
+
+```
+src/
+├── component/
+│   ├── MetalCard.tsx          # Price card with expand/collapse details
+│   ├── MetalCardSkeleton.tsx  # Loading placeholder matching card layout
+│   ├── MarketSummary.tsx      # Up/down / top mover summary row
+│   └── SkeletonBox.tsx        # Animated skeleton block
+├── hook/
+│   └── useFetchMetalPrice.ts  # API client, METALS_CONFIG, useFetchMetalPrices
+├── screen/
+│   └── HomeScreen.tsx         # Main screen (list, header, refresh)
+├── util/
+│   └── format.ts              # USD formatting & timestamp helpers
+└── theme.ts                   # Colors, spacing, radius tokens
+```
+
+---
+
+## How to execute (local development)
+
+### Prerequisites
+
+- **Node.js** `>= 22.11.0` (see `package.json` `engines`)
+- **npm** (or Yarn)
+- [React Native environment setup](https://reactnative.dev/docs/set-up-your-environment) for your OS
+- **Android**: Android Studio, SDK, emulator or USB device
+- **iOS** (macOS only): Xcode, CocoaPods, simulator or device
+
+### 1. Clone and install dependencies
 
 ```sh
-# Using npm
+git clone <repository-url>
+cd MetalPriceTracker
+npm install
+```
+
+### 2. Configure API key
+
+Create a `.env` file in the project root (this file is gitignored):
+
+```env
+GOLD_API_KEY=your_goldapi_io_key_here
+```
+
+Sign up at [goldapi.io](https://www.goldapi.io/) and copy your access token into `GOLD_API_KEY`.
+
+> **Note:** After changing `.env`, rebuild the native app (not just Metro reload). `react-native-config` reads env at build time on Android/iOS.
+
+### 3. Start Metro
+
+```sh
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Build and run your app
+### 4. Run the app
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
+**Android** (separate terminal):
 
 ```sh
-# Using npm
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+**iOS** (macOS, first time or after native dep changes):
 
 ```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+cd ios && bundle install && bundle exec pod install && cd ..
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### 5. Other scripts
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```sh
+npm run lint    # ESLint
+npm test        # Jest unit tests (App smoke test)
+```
 
-## Step 3: Modify your app
+### Reloading during development
 
-Now that you have successfully run the app, let's make changes!
+- **Android emulator:** `R` twice or Dev Menu (`Ctrl+M` / `Cmd+M`) → Reload
+- **iOS simulator:** `R` in simulator
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+---
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## Deployment notes
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### Environment & secrets
 
-## Congratulations! :tada:
+- Never commit `.env` or API keys to source control (already listed in `.gitignore`).
+- For CI/CD or store builds, inject `GOLD_API_KEY` via your pipeline’s secret store and generate `.env` before the native build step.
+- **Android:** `android/app/build.gradle` applies `react-native-config` `dotenv.gradle` — env vars are bundled into the release build at compile time.
+- **iOS:** Run `pod install` after env changes; ensure Xcode build phases pick up config from `react-native-config` (default RN linking).
 
-You've successfully run and modified your React Native App. :partying_face:
+### Android release build (outline)
 
-### Now what?
+1. Generate a release keystore and configure signing in `android/app/build.gradle`.
+2. Set `GOLD_API_KEY` in `.env` (or CI secret) for the release build.
+3. Build:
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+   ```sh
+   cd android
+   ./gradlew assembleRelease
+   ```
 
-# Troubleshooting
+4. Output APK/AAB: `android/app/build/outputs/`.
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### iOS release build (outline)
 
-# Learn More
+1. Open `ios/MetalPriceTracker.xcworkspace` in Xcode.
+2. Set team, bundle ID, and signing.
+3. Ensure `.env` exists with `GOLD_API_KEY` before archiving.
+4. **Product → Archive** and distribute via App Store or TestFlight.
 
-To learn more about React Native, take a look at the following resources:
+### API usage in production
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- Each app open triggers **4 parallel requests** (one per metal) on mount.
+- Pull-to-refresh or **Refresh** triggers another **4 requests**.
+- GoldAPI plans have **rate limits**; monitor usage on your dashboard and avoid auto-polling without backoff.
+- The app fetches **once on mount** (`useEffect` with empty deps) to avoid dependency-loop re-fetches.
+
+### Network
+
+- The app requires **internet** access to reach `https://www.goldapi.io`.
+- Android cleartext is not required (HTTPS only).
+
+---
+
+## Approach
+
+- **Custom hook (`useFetchMetalPrices`)** centralizes fetching, loading/error state, and `refetch`. Metals are defined in `METALS_CONFIG` so adding/removing symbols is a single config change.
+- **Parallel requests with `Promise.allSettled` pattern** (per-metal `forEach` + settle counter) so each card updates independently and failures are isolated.
+- **Presentation mapping** (`mapMetalToCardProps`) keeps API types separate from UI props and formats numbers in one place.
+- **Minimal dependencies** — `axios`, `react-native-config`, `react-native-safe-area-context`; no navigation or global state library for this scope.
+- **Fintech-oriented UI** — neutral palette, summary chips, press feedback on cards, skeleton loaders instead of spinners on cards.
+- **Single-screen architecture** — `App.tsx` → `HomeScreen`; suitable for a focused price tracker MVP.
+
+---
+
+## Challenges faced
+
+- **API rate limits** — Fetching four metals on every mount/refresh consumes four API credits; guarded against `useEffect` dependency loops that could cause repeated calls.
+- **`react-native-config` on native** — Env vars require a **native rebuild** after `.env` changes; Metro-only reload is insufficient.
+- **Partial failures** — One metal (e.g. unsupported symbol or quota error) can fail while others succeed; UI shows per-card errors and a global message only if all fail.
+- **TypeScript + API shape** — GoldAPI returns many fields (including gram karat prices); types mirror the full response for future UI use.
+- **React Native new architecture** — Project uses RN `0.85.x`; ensure JDK/Android SDK versions match [official RN docs](https://reactnative.dev/docs/set-up-your-environment) for your machine.
+
+---
+
+## API reference (used fields)
+
+Example: `GET https://www.goldapi.io/api/XAU/USD`
+
+| Field | Usage in app |
+|-------|----------------|
+| `price` | Main spot price on card |
+| `ch`, `chp` | Change amount and percent pill |
+| `price_gram_24k` | Subtitle (per gram, 24k) |
+| `high_price`, `low_price`, `bid`, `ask`, `open_price`, `prev_close_price` | Expanded card details |
+| `exchange` | Shown under metal name |
+| `timestamp` | “Updated” time in header |
+
+---
+
+## License
+
+Private project (`package.json` `"private": true`). Add a license file if you plan to open-source or distribute.
